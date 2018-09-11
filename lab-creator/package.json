@@ -1,0 +1,19 @@
+{
+  "name": "lab-creator",
+  "version": "0.0.1",
+  "description": "A CLI tool for creating the environment for starting a new lab.",
+  "main": "lab-creator.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "create-lab": "./lab-creator.js"
+  },
+  "author": "Tejas Shah (tejashah88)",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^2.18.0",
+    "dedent": "^0.7.0",
+    "fs-extra": "^7.0.0"
+  }
+}

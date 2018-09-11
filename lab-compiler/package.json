@@ -1,0 +1,15 @@
+{
+  "name": "lab-compiler",
+  "version": "0.0.1",
+  "description": "A CLI tool for compiling a lab's assets into a word document.",
+  "main": "lab-compiler.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Tejas Shah (tejashah88)",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^2.18.0",
+    "officegen": "^0.4.5"
+  }
+}
