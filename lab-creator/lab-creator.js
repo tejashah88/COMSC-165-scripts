@@ -76,9 +76,9 @@ config_check_args.forEach(([val, desc]) => isPresentAsExpected(val, desc, true))
 // get needed values
 let { id, parts } = program;
 let rootDir = config['labs-directory'];
-let { course, author } = config;
-let indentType = config.indentation.type;
-let indentAmt = config.indentation.amount;
+let { course, author, indentation } = config;
+let indentType = indentation.type;
+let indentAmt = indentation.amount;
 
 let indent = generateIndentation(indentType, indentAmt);
 

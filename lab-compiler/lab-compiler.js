@@ -32,12 +32,8 @@ program
 isPresentAsExpected(program.id, 'id of the lab');
 
 // check config args
-let config_check_args = [
-  [config['labs-directory'], 'labs-directory'],
-  [config.author, 'author'],
-];
-
-config_check_args.forEach(([val, desc]) => isPresentAsExpected(val, desc, true));
+isPresentAsExpected(config['labs-directory'], 'labs-directory', true)
+isPresentAsExpected(config.author, 'author', true)
 
 // get needed values
 let id = program.id;
@@ -53,11 +49,11 @@ if (!fs.existsSync(labDir)) {
   process.exit(1);
 }
 
-let partsArray = parts[0] && parts.length > 0 ? parts : range(1, partDirs.length);
+let partsArray = parts.length > 0 && parts[0] ? parts : range(1, partDirs.length);
 let labPartsDirs = partsArray.map(num => ({ part: num, dir: path.join(labDir, `part-${num}`) }));
 let nonExistingDirs = labPartsDirs.filter(info => !fs.existsSync(info.dir));
 
-// worn the user that certain parts don't exist and that it will be skipped
+// warn the user that certain parts don't exist and that it will be skipped
 if (nonExistingDirs.length > 0) {
   console.log('Warning! The following part directories will be skipped since they do not exist:');
   nonExistingDirs.forEach(dir => console.log(' - ' + dir));
@@ -86,11 +82,12 @@ function compileReport({ dir, part }) {
     for (let line of codeLines) {
       let content = new docx.Paragraph().spacing({ before: 0, after: 0 });
       if (line)
-        content.addRun(new docx.TextRun(line).font("Consolas"))
+        content.addRun(new docx.TextRun(line).font("Consolas"));
       report.addParagraph(content);
     }
 
-    report.createParagraph().pageBreak();
+    if (screenshots.length)
+      report.createParagraph().pageBreak();
   }
 
   for (let file of screenshots) {
@@ -103,14 +100,16 @@ function compileReport({ dir, part }) {
   packer
     .toBuffer(report)
     .then(buffer => {
-      fs.outputFileSync(`Lab ${id.toUpperCase()}-${part}.docx`, buffer);
+      fs.outputFileSync(path.join(dir, `Lab ${id.toUpperCase()}-${part}.docx`), buffer);
+    })
+    .catch(err => {
+      console.error(`Unable to save lab report ${id.toUpperCase()}-${part}: ${err}`);
     });
 }
 
-for (let index in labPartsDirs) {
-  let partDir = labPartsDirs[index];
-  console.log(`Creating part ${index}...`);
-  compileReport(partDir)
+for (let partDir of labPartsDirs) {
+  console.log(`Compiling lab report ${id.toUpperCase()}-${partDir.part}...`);
+  compileReport(partDir);
 }
 
-console.log(`All done!`);
+console.log('All done!');
