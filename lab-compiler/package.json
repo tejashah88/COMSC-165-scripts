@@ -6,10 +6,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "bin": {
+    "compile-lab": "./lab-compiler.js"
+  },
   "author": "Tejas Shah (tejashah88)",
   "license": "MIT",
   "dependencies": {
     "commander": "^2.18.0",
-    "officegen": "^0.4.5"
+    "docx": "^4.0.0",
+    "fs-extra": "^7.0.0",
+    "image-size": "^0.6.3",
+    "officegen": "^0.4.5",
+    "trim-right": "^1.0.1"
   }
 }

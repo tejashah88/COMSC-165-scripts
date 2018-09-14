@@ -53,8 +53,8 @@ const range = (start, end) => [...Array(1 + end - start).keys()].map(v => start 
 
 program
   .version('0.0.1', '-v, --version')
-  .option('-i, --id <n>', 'The ID of the lab (ex. 1A or 3C)')
-  .option('-p, --parts <n>', 'The number of parts in the lab', parseInt)
+  .option('-i, --id <id>', 'The ID of the lab (ex. 1A or 3C)')
+  .option('-p, --parts <parts>', 'The number of parts in the lab', parseInt)
   .parse(process.argv);
 
 // check program arguments
