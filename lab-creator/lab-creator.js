@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs-extra');
 const program = require('commander');
 const dedent = require('dedent');
+const got = require('got');
 const config = require('./config.json');
 
 function isPresentAsExpected(val, desc, partOfConfig = false) {
@@ -27,7 +28,7 @@ function getCurrentDay() {
 const generateFileName = (id, partNum) => `lab-${id}-${partNum}.cpp`;
 const generateIndentation = (type, amt) => type == 'spaces' ? ' '.repeat(amt) : '\t';
 
-function generateCppCode(id, partNum, course, author, indent) {
+function generateCppCode(id, partNum, course, author, indent, libraryCode) {
   return dedent(`
     /*
      * Name: Lab ${id.toUpperCase()}-${partNum}
@@ -39,8 +40,13 @@ function generateCppCode(id, partNum, course, author, indent) {
 
     #include <iostream>
     #include <string>
+    #include <iomanip>
+    #include <fstream>
+    #include <vector>
 
     using namespace std;
+
+    ${libraryCode.split('\n').map((line, index) => index == 0 ? line : '    ' + line).join('\n')}
 
     int main() {
     ${indent}cout << "Hello World!" << endl;
@@ -63,9 +69,10 @@ isPresentAsExpected(program.parts, 'number of parts in the lab');
 
 // check config args
 let config_check_args = [
-  [config['labs-directory'], 'labs-directory'],
+  [config['labs-directory'], 'labs directory'],
   [config.course, 'course'],
   [config.author, 'author'],
+  [config['gist-code-url'], 'gist code url'],
   [config.indentation, 'indentation'],
   [config.indentation.type, 'indentation type'],
   [config.indentation.amount, 'indentation amount']
@@ -77,6 +84,7 @@ config_check_args.forEach(([val, desc]) => isPresentAsExpected(val, desc, true))
 let { id, parts } = program;
 let rootDir = config['labs-directory'];
 let { course, author, indentation } = config;
+let gistUrl = config['gist-code-url'];
 let indentType = indentation.type;
 let indentAmt = indentation.amount;
 
@@ -103,7 +111,16 @@ if (existingDirs.length > 0) {
   process.exit(1);
 }
 
-labPartsInfo.forEach(({ partNum, dir, file, combined }) => {
-  let code = generateCppCode(id, partNum, course, author, indent);
+labPartsInfo.forEach(async ({ partNum, dir, file, combined }) => {
+  let libraryCode = '';
+  if (gistUrl) {
+    try {
+      libraryCode = (await got(gistUrl)).body;
+    } catch (err) {
+      console.log('Unable to pull remote code from given gist url!');
+    }
+  }
+
+  let code = generateCppCode(id, partNum, course, author, indent, libraryCode);
   fs.outputFileSync(combined, code);
 });

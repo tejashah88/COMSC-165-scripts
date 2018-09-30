@@ -16,7 +16,6 @@
     "docx": "^4.0.0",
     "fs-extra": "^7.0.0",
     "image-size": "^0.6.3",
-    "officegen": "^0.4.5",
     "trim-right": "^1.0.1"
   }
 }

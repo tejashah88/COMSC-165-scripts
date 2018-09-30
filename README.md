@@ -25,6 +25,7 @@ Config settings:
 * `labs-directory` - The root directory of the labs
 * `course` - The course number (ex. COMSC-165)
 * `author` - Your name
+* `gist-code-url` (optional) - The url for pulling boilerplate code from a Gist hosted from GitHub.
 * `indentation` - Settings for indentation for the generated code
   * `type` - either 'spaces' or 'tabs' (defaults to 'tabs')
   * `amount` - The amount of spaces to indent with (doesn't apply to tabs)
