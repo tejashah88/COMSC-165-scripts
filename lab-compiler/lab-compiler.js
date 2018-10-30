@@ -24,7 +24,7 @@ const files = p => fs.readdirSync(p).filter(f => fs.statSync(path.join(p, f)).is
 
 program
   .version('0.0.1', '-v, --version')
-  .option('-i, --id <id>', 'The ID of the lab (ex. 1A or 3C)')
+  .option('-i, --id <id>', 'The ID of the lab (ex. 1a, 3c, 2, or 6)')
   .option('-p, --part [part]', 'The specific part to compile. Not specifying it will imply that all parts sould be processed.', parseInt)
   .parse(process.argv);
 
@@ -50,17 +50,20 @@ if (!fs.existsSync(labDir)) {
 }
 
 let partsArray = parts.length > 0 && parts[0] ? parts : range(1, partDirs.length);
+if (id.length == 1)
+  partsArray = partsArray.map(num => String.fromCharCode(96 + num).toUpperCase());
+
 let labPartsDirs = partsArray.map(num => ({ part: num, dir: path.join(labDir, `part-${num}`) }));
 let nonExistingDirs = labPartsDirs.filter(info => !fs.existsSync(info.dir));
 
 // warn the user that certain parts don't exist and that it will be skipped
 if (nonExistingDirs.length > 0) {
   console.log('Warning! The following part directories will be skipped since they do not exist:');
-  nonExistingDirs.forEach(dir => console.log(' - ' + dir));
+  nonExistingDirs.forEach(info => console.log(' - ' + info.dir));
   process.exit(1);
 }
 
-function compileReport({ dir, part }) {
+async function compileReport({ dir, part }) {
   let allFiles = files(dir).map(file => path.join(dir, file.toLowerCase()));
   let codeFiles = allFiles.filter(file => file.endsWith('.cpp'));
   let screenshots = allFiles.filter(file => file.endsWith('.png'));
@@ -97,19 +100,29 @@ function compileReport({ dir, part }) {
   }
 
   let packer = new docx.Packer(report);
-  packer
+
+  try {
+    let buffer = await packer.toBuffer(report);
+    fs.outputFileSync(path.join(dir, `Lab ${id.toUpperCase()}-${part}.docx`), buffer);
+  } catch (err) {
+    console.error(`Unable to save lab report ${id.toUpperCase()}-${part}: ${err}`);
+  }
+
+  /*packer
     .toBuffer(report)
     .then(buffer => {
       fs.outputFileSync(path.join(dir, `Lab ${id.toUpperCase()}-${part}.docx`), buffer);
     })
     .catch(err => {
       console.error(`Unable to save lab report ${id.toUpperCase()}-${part}: ${err}`);
-    });
+    });*/
 }
 
-for (let partDir of labPartsDirs) {
-  console.log(`Compiling lab report ${id.toUpperCase()}-${partDir.part}...`);
-  compileReport(partDir);
-}
+(async () => {
+  for (let partDir of labPartsDirs) {
+    console.log(`Compiling lab report ${id.toUpperCase()}-${partDir.part}...`);
+    await compileReport(partDir);
+  }
 
-console.log('All done!');
+  console.log('All done!');
+})();

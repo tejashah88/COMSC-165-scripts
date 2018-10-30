@@ -25,7 +25,7 @@ function getCurrentDay() {
   return `${month}/${day}/${year}`;
 }
 
-const generateFileName = (id, partNum) => `lab-${id}-${partNum}.cpp`;
+const generateFileName = (id, partNum) => id.length === 1 ? `lab-${id}${partNum}.cpp` : `lab-${id}-${partNum}.cpp`;
 const generateIndentation = (type, amt) => type == 'spaces' ? ' '.repeat(amt) : '\t';
 
 function generateCppCode(id, partNum, course, author, indent, libraryCode) {
@@ -59,7 +59,7 @@ const range = (start, end) => [...Array(1 + end - start).keys()].map(v => start 
 
 program
   .version('0.0.1', '-v, --version')
-  .option('-i, --id <id>', 'The ID of the lab (ex. 1A or 3C)')
+  .option('-i, --id <id>', 'The ID of the lab (ex. 1a, 3c, 2, or 6)')
   .option('-p, --parts <parts>', 'The number of parts in the lab', parseInt)
   .parse(process.argv);
 
@@ -93,6 +93,10 @@ let indent = generateIndentation(indentType, indentAmt);
 // create directories
 let newLabDir = path.join(rootDir, `lab-${id}`);
 let partsArray = range(1, parts);
+
+if (id.length == 1)
+  partsArray = partsArray.map(num => String.fromCharCode(96 + num).toUpperCase());
+
 let labPartsInfo = partsArray.map(num => {
   let partNum = num;
   let dir = path.join(newLabDir, `part-${num}`);
@@ -106,7 +110,7 @@ let existingDirs = allDirs.filter(fs.existsSync);
 
 // don't override any existing directories
 if (existingDirs.length > 0) {
-  console.log('Error! The following directories would be overriden with this operation:');
+  console.log('Error! The following directories would be overridden with this operation:');
   existingDirs.forEach(dir => console.log(' - ' + dir));
   process.exit(1);
 }
