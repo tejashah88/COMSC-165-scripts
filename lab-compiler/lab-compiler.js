@@ -68,9 +68,9 @@ function makeParagraph() {
 }
 
 async function compileReport({ dir, part }) {
-  let allFiles = files(dir).map(file => path.join(dir, file.toLowerCase()));
+  let allFiles = files(dir).map(file => path.join(dir, file));
   let codeFiles = allFiles.filter(file => file.endsWith('.cpp') || file.endsWith('.h'));
-  let screenshots = allFiles.filter(file => file.endsWith('.png'));
+  let screenshots = allFiles.filter(file => file.toLowerCase().endsWith('.png'));
 
   const DEFAULT_MARGIN = 100 * 5;
   let report = new docx.Document({
