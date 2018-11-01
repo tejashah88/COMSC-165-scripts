@@ -62,7 +62,7 @@ Config settings:
 
 
 ## Lab cleaner
-It cleans any generated files (i.e. '.exe' and '.o' files) after you are done with a lab
+It cleans any generated files (i.e. '.exe', '.o', and '.docx' files) after you are done with a lab
 
 ### First-time setup
 You'll need to run this step if you want to run this command anywhere else.

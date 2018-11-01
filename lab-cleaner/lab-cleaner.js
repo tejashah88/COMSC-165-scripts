@@ -40,7 +40,7 @@ let labPartsDirs = labDirs
 
 function getJunkFiles(dir) {
   let allFiles = files(dir).map(file => path.join(dir, file.toLowerCase()));
-  let junkFiles = allFiles.filter(file => file.endsWith('.exe') || file.endsWith('.o'));
+  let junkFiles = allFiles.filter(file => file.endsWith('.exe') || file.endsWith('.o') || file.endsWith('.docx'));
   return junkFiles;
 }
 

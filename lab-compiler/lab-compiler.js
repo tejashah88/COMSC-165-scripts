@@ -54,7 +54,7 @@ if (id.length == 1)
   partsArray = partsArray.map(num => String.fromCharCode(96 + num).toUpperCase());
 
 let labPartsDirs = partsArray.map(num => ({ part: num, dir: path.join(labDir, `part-${num}`) }));
-let nonExistingDirs = labPartsDirs.filter(info => !fs.existsSync(info.dir));
+let nonExistingDirs = labPartsDirs.filter(info => !fs.pathExistsSync(info.dir));
 
 // warn the user that certain parts don't exist and that it will be skipped
 if (nonExistingDirs.length > 0) {
@@ -63,9 +63,13 @@ if (nonExistingDirs.length > 0) {
   process.exit(1);
 }
 
+function makeParagraph() {
+  return new docx.Paragraph().spacing({ before: 0, after: 0 });
+}
+
 async function compileReport({ dir, part }) {
   let allFiles = files(dir).map(file => path.join(dir, file.toLowerCase()));
-  let codeFiles = allFiles.filter(file => file.endsWith('.cpp'));
+  let codeFiles = allFiles.filter(file => file.endsWith('.cpp') || file.endsWith('.h'));
   let screenshots = allFiles.filter(file => file.endsWith('.png'));
 
   const DEFAULT_MARGIN = 100 * 5;
@@ -80,22 +84,42 @@ async function compileReport({ dir, part }) {
     left: DEFAULT_MARGIN,
   });
 
-  for (let file of codeFiles) {
-    let codeLines = fs.readFileSync(file, 'utf-8').trim().split('\n').map(trimRight);
+  for (let index in codeFiles) {
+    // what genius thought to make 'index' be a string??
+    index = parseInt(index);
+    let file = codeFiles[index];
+
+    // add name of file
+    let fileNamePara = makeParagraph();
+    let fileName = path.basename(file);
+    fileNamePara.addRun(new docx.TextRun(`File: ${fileName}`).font("Consolas").bold());
+    report.addParagraph(fileNamePara);
+
+    // add blank line
+    report.addParagraph(makeParagraph());
+
+    let code = await fs.readFile(file, 'utf-8');
+    let codeLines = code.trim().split('\n').map(trimRight);
+
     for (let line of codeLines) {
-      let content = new docx.Paragraph().spacing({ before: 0, after: 0 });
+      let content = makeParagraph();
       if (line)
         content.addRun(new docx.TextRun(line).font("Consolas"));
+      // else, just add a blank line
       report.addParagraph(content);
     }
 
-    if (screenshots.length)
+    if (index + 1 !== codeFiles.length)
       report.createParagraph().pageBreak();
   }
 
+  if (screenshots.length)
+    report.createParagraph().pageBreak();
+
   for (let file of screenshots) {
     let { width, height } = imgSize(file);
-    let image = report.createImage(fs.readFileSync(file), width, height);
+    let imgBuffer = await fs.readFile(file);
+    let image = report.createImage(imgBuffer, width, height);
     image.scale(0.95);
   }
 
@@ -103,26 +127,19 @@ async function compileReport({ dir, part }) {
 
   try {
     let buffer = await packer.toBuffer(report);
-    fs.outputFileSync(path.join(dir, `Lab ${id.toUpperCase()}-${part}.docx`), buffer);
+    await fs.outputFile(path.join(dir, `Lab ${id.toUpperCase()}-${part}.docx`), buffer);
   } catch (err) {
     console.error(`Unable to save lab report ${id.toUpperCase()}-${part}: ${err}`);
   }
-
-  /*packer
-    .toBuffer(report)
-    .then(buffer => {
-      fs.outputFileSync(path.join(dir, `Lab ${id.toUpperCase()}-${part}.docx`), buffer);
-    })
-    .catch(err => {
-      console.error(`Unable to save lab report ${id.toUpperCase()}-${part}: ${err}`);
-    });*/
 }
 
 (async () => {
-  for (let partDir of labPartsDirs) {
-    console.log(`Compiling lab report ${id.toUpperCase()}-${partDir.part}...`);
-    await compileReport(partDir);
-  }
+  await Promise.all(
+    labPartsDirs.map(partDir => {
+      console.log(`Compiling lab report ${id.toUpperCase()}-${partDir.part}...`);
+      return compileReport(partDir);
+    })
+  );
 
   console.log('All done!');
 })();

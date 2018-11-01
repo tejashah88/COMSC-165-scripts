@@ -46,13 +46,13 @@ function generateCppCode(id, partNum, course, author, indent, libraryCode) {
 
     using namespace std;
 
-    ${libraryCode.split('\n').map((line, index) => index == 0 ? line : '    ' + line).join('\n')}
+    ${libraryCode.split('\n').map((line, index) => index == 0 ? line : indent + line).join('\n')}
 
     int main() {
     ${indent}cout << "Hello World!" << endl;
     ${indent}return 0;
     }
-  `).trim()
+  `).trim();
 }
 
 const range = (start, end) => [...Array(1 + end - start).keys()].map(v => start + v);
@@ -82,6 +82,7 @@ config_check_args.forEach(([val, desc]) => isPresentAsExpected(val, desc, true))
 
 // get needed values
 let { id, parts } = program;
+id = id.toLowerCase();
 let rootDir = config['labs-directory'];
 let { course, author, indentation } = config;
 let gistUrl = config['gist-code-url'];
@@ -106,7 +107,7 @@ let labPartsInfo = partsArray.map(num => {
 });
 
 let allDirs = [newLabDir, ...labPartsInfo.map(info => info.dir)];
-let existingDirs = allDirs.filter(fs.existsSync);
+let existingDirs = allDirs.filter(fs.pathExistsSync);
 
 // don't override any existing directories
 if (existingDirs.length > 0) {
@@ -115,7 +116,7 @@ if (existingDirs.length > 0) {
   process.exit(1);
 }
 
-labPartsInfo.forEach(async ({ partNum, dir, file, combined }) => {
+(async () => {
   let libraryCode = '';
   if (gistUrl) {
     try {
@@ -125,6 +126,12 @@ labPartsInfo.forEach(async ({ partNum, dir, file, combined }) => {
     }
   }
 
-  let code = generateCppCode(id, partNum, course, author, indent, libraryCode);
-  fs.outputFileSync(combined, code);
-});
+  await Promise.all(
+    labPartsInfo.map(info => {
+      let { partNum, dir, file, combined } = info;
+      let code = generateCppCode(id, partNum, course, author, indent, libraryCode);
+      console.log(`Creating lab environment ${id.toUpperCase()}-${partNum}...`);
+      return fs.outputFile(combined, code);
+    })
+  );
+})();
