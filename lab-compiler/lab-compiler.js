@@ -50,7 +50,7 @@ if (!fs.existsSync(labDir)) {
 }
 
 let partsArray = parts.length > 0 && parts[0] ? parts : range(1, partDirs.length);
-if (id.length == 1)
+if (!isNaN(Number(id)))
   partsArray = partsArray.map(num => String.fromCharCode(96 + num).toUpperCase());
 
 let labPartsDirs = partsArray.map(num => ({ part: num, dir: path.join(labDir, `part-${num}`) }));

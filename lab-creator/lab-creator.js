@@ -95,7 +95,7 @@ let indent = generateIndentation(indentType, indentAmt);
 let newLabDir = path.join(rootDir, `lab-${id}`);
 let partsArray = range(1, parts);
 
-if (id.length == 1)
+if (!isNaN(Number(id)))
   partsArray = partsArray.map(num => String.fromCharCode(96 + num).toUpperCase());
 
 let labPartsInfo = partsArray.map(num => {
